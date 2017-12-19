@@ -1,0 +1,74 @@
+---
+title: "dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: fill
+    orientation: rows
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+
+## Row
+
+### ????
+
+```{r}
+
+```
+
+
+### Total Asset {data-width=300}
+
+```{r}
+valueBox(1114451, icon = "glyphicon glyphicon-yen", 
+         color = ifelse(1114451 > 1000000, "success", "info")
+         )
+```
+
+## Row
+
+### Assets
+
+```{r}
+
+```
+
+## Row
+
+### Stock graph
+
+```{r}
+
+```
+
+## Column
+
+### Assets per Month
+
+```{r}
+
+```
+
+### Assets heatmap{data-width=300}
+
+```{r}
+
+```
+
+## Column
+
+### Stock per Month
+
+```{r}
+
+```
+
+### Stock heatmap{data-width=300}
+
+```{r}
+
+```
