@@ -16,38 +16,36 @@ library(data.table)
 library(formattable)
 library(tidyr)
 library(plotly)
-library(fortunes)
-output.dt <- matrix(sample(-1000000:1000000,372),31,12) %>% data.table()
-colnames(output.dt) <- c("1","2","3","4","5","6","7","8","9","10","11","12")
-
-
+output.dt <- fread("data.csv", encoding = "UTF-8")
 ```
 
 
-row {data-height=30%}
+row {data-height=20%}
 ----
 
-### card1 {data-width=40%}
+### card1 {data-width=35%}
 
 ```{r}
-valueBox(1160000, 
+asset_fresh <- output.dt$asset %>% .[length(.)]
+valueBox(asset_fresh, 
          caption = "Total Asset",
          icon = "glyphicon glyphicon-yen",
-         color = ifelse(1160000 < 2000000, "warning", "success")
+         color = ifelse(asset_fresh < 2000000, "warning", "success")
          )
 ```
 
-### card2 {data-width=40%}
+### card2 {data-width=35%}
 
 ```{r}
-valueBox(100000, 
+stock_fresh <- output.dt$amount[output.dt$details == "Stock"] %>% sum()
+valueBox(stock_fresh, 
          caption = "Total Stock",
          icon = "glyphicon glyphicon-tint",
-         color = ifelse(100000 > 200000, "warning", "success")
+         color = ifelse(stock_fresh > 1000000, "warning", "success")
          )
 ```
 
-### card3 {data-width=20%}
+### card3 {data-width=30%}
 
 ```{r}
 valueBox(150000, 
@@ -57,69 +55,107 @@ valueBox(150000,
          )
 ```
 
-column {data-height=40%}
+column {data-height=50%}
 ----
 
-### Assets  {data-width=80%}
+### Assets  {data-width=70%}
 
 ```{r}
-data <- t(USPersonalExpenditure)
-data <- data.frame("year"=rownames(data), data)
+asset.dt <- output.dt %>% 
+  select(ds, amount, details) %>% 
+  data.table(. , tmp = paste0(.$ds ,.$details)) %>% 
+  group_by(tmp) %>% 
+  summarise(total = sum(amount))
 
-p <- plot_ly(data, x = ~year, y = ~Food.and.Tobacco, name = 'Food and Tobacco', type = 'scatter', mode = 'none', fill = 'tozeroy', fillcolor = '#97D1C7', showlegend = FALSE) %>%
-  add_trace(y = ~Household.Operation, name = 'Household Operation', fillcolor = '#73ABC2') %>%
-  add_trace(y = ~Medical.and.Health, name = 'Medical and Health', fillcolor = '#FFE581') %>%
-  add_trace(y = ~Personal.Care, name = 'Personal Care', fillcolor = '#F58A88') %>%
-  add_trace(y = ~Private.Education, name = 'Private Education', fillcolor = '#7F807F') %>%
-  layout(xaxis = list(title = "",
-                      showgrid = FALSE),
-         yaxis = list(title = "Expenditures (",
-                      showgrid = FALSE))
+asset.dt <-  asset.dt %>% 
+  data.table(ds = as.Date(substr(.$tmp, 1, 10)), amount = .$total, details = substr(.$tmp, 11, 20)) %>% 
+  dcast(ds ~ details, value.var = "amount") %>% 
+  data.frame()
+asset.dt[is.na(asset.dt)] <- 0
 
-p
 
-```
-
-### Pie  {data-width=20%}
-
-```{r}
-data <- t(USPersonalExpenditure)
-data2 <- data/rowSums(data)*100
-data2 <- data.frame("year"=rownames(data2), data2)
-
-# Transforming into a cumulative table:
-for (i in c(6:3)) {
-  data2[,i-1] <- data2[,i-1] + data2[,i]
+for(i in 1:nrow(asset.dt)){
+  for(j in 2:ncol(asset.dt))
+    if(i != 1){
+      asset.dt[i,j] <- asset.dt[i-1,j] + asset.dt[i,j]
+    }
+}
+for(i in 1:nrow(asset.dt)){
+  for(j in 3:ncol(asset.dt)){
+    asset.dt[i,j] <- asset.dt[i,j-1] + asset.dt[i,j]
+  }
 }
 
-p <- plot_ly(data2, x = ~year, y = ~Food.and.Tobacco, name = 'Food and Tobacco', type = 'scatter', mode = 'none', fill = 'tozeroy', fillcolor = '#97D1C7', showlegend = FALSE) %>%
-  add_trace(y = ~Household.Operation, name = 'Household Operation', fillcolor = '#73ABC2') %>%
-  add_trace(y = ~Medical.and.Health, name = 'Medical and Health', fillcolor = '#FFE581') %>%
-  add_trace(y = ~Personal.Care, name = 'Personal Care', fillcolor = '#F58A88') %>%
-  add_trace(y = ~Private.Education, name = 'Private Education', fillcolor = '#7F807F') %>%
-  layout(title = 'United States Personal Expenditures by Categories',
-         xaxis = list(title = "",
-                      showgrid = FALSE),
-         yaxis = list(title = "Proportion from the Total Expenditures",
-                      showgrid = FALSE,
-                      ticksuffix = '%'))
+p <- plot_ly(asset.dt, x = ~ds, y = ~Yucho, name = 'Yucho', type = 'scatter', mode = 'none', fill = 'tozeroy', fillcolor = '#97D1C7') %>%
+  add_trace(y = ~Stock, name = 'Stock', fillcolor = '#F58A88') %>%
+  add_trace(y = ~Mizuho, name = 'Mizuho', fillcolor = '#73ABC2') %>%
+  layout(xaxis = list(showgrid = TRUE),
+         yaxis = list(title = "Total Assets",
+                      showgrid = TRUE))
 
+p
+
+
+```
+
+### Pie  {data-width=30%}
+
+```{r}
+asset.dt <- output.dt %>% 
+  select(ds, amount, details) %>% 
+  data.table(. , tmp = paste0(.$ds ,.$details)) %>% 
+  group_by(tmp) %>% 
+  summarise(total = sum(amount))
+
+asset.dt <-  asset.dt %>% 
+  data.table(ds = as.Date(substr(.$tmp, 1, 10)), amount = .$total, details = substr(.$tmp, 11, 20)) %>% 
+  dcast(ds ~ details, value.var = "amount") %>% 
+  data.frame()
+asset.dt[is.na(asset.dt)] <- 0
+
+
+for(i in 1:nrow(asset.dt)){
+  for(j in 2:ncol(asset.dt))
+    if(i != 1){
+      asset.dt[i,j] <- asset.dt[i-1,j] + asset.dt[i,j]
+    }
+}
+for(i in 1:nrow(asset.dt)){
+  for(j in 3:ncol(asset.dt)){
+    asset.dt[i,j] <- asset.dt[i,j-1] + asset.dt[i,j]
+  }
+}
+asset.dt[,2:4] <- asset.dt[,2:4]/apply(asset.dt[,2:4],1,sum)
+for(i in 1:nrow(asset.dt)){
+  for(j in 3:ncol(asset.dt)){
+    asset.dt[i,j] <- asset.dt[i,j-1] + asset.dt[i,j]
+  }
+}
+
+
+p <- plot_ly(asset.dt, x = ~ds, y = ~Yucho, name = 'Yucho', type = 'scatter', mode = 'none', fill = 'tozeroy', fillcolor = '#97D1C7', showlegend = FALSE) %>%
+  add_trace(y = ~Stock, name = 'Stock', fillcolor = '#F58A88') %>%
+  add_trace(y = ~Mizuho, name = 'Mizuho', fillcolor = '#73ABC2') %>%
+  layout(xaxis = list(showgrid = TRUE),
+         yaxis = list(title = "Total Assets",
+                      showgrid = TRUE))
 
 p
 ```
 
 
-column {data-height=20%}
+column {data-height=40%}
 ----
 
 ### Data {data-width=50%}
 
 ```{r}
 
-```
+formattable(output.dt, list(
+  asset = color_bar("pink"),
+  amount = formatter("span",
+                      style = x ~ ifelse(x < 0 , formattable::style(color = "red"), formattable::style(color = "green")))
 
-### List {data-width=50%}
-
-```{r}
+))
 
 ```
