@@ -93,7 +93,7 @@ for(i in 1:nrow(asset.dt)){
   }
 }
 
-p <- plot_ly(asset.dt, x = ~ds, y = ~Yucho, name = 'Yucho', type = 'scatter', mode = 'none', fill = 'tozeroy', fillcolor = '#97D1C7') %>%
+p <- plot_ly(asset.dt, x = ~ds, y = ~Yucho, name = 'Yucho', type = 'scatter', mode = 'none', fill = 'tozeroy', fillcolor = '#97D1C7', showlegend = FALSE) %>%
   add_trace(y = ~Stock, name = 'Stock', fillcolor = '#F58A88') %>%
   add_trace(y = ~Mizuho, name = 'Mizuho', fillcolor = '#73ABC2') %>%
   layout(xaxis = list(showgrid = TRUE),
@@ -154,7 +154,41 @@ p
 column {data-height=35%}
 ----
 
-### Details {data-width=70%}
+### Details {data-width=35%}
+
+```{r}
+
+asset.dt <- output.dt %>% 
+  select(ds, amount, details) %>% 
+  data.table(. , tmp = paste0(.$ds ,.$details)) %>% 
+  group_by(tmp) %>% 
+  summarise(total = sum(amount))
+
+asset.dt <-  asset.dt %>% 
+  data.table(ds = as.Date(substr(.$tmp, 1, 10)), amount = .$total, details = substr(.$tmp, 11, 20)) %>% 
+  dcast(ds ~ details, value.var = "amount") %>% 
+  data.frame()
+asset.dt[is.na(asset.dt)] <- 0
+
+
+for(i in 1:nrow(asset.dt)){
+  for(j in 2:ncol(asset.dt))
+    if(i != 1){
+      asset.dt[i,j] <- asset.dt[i-1,j] + asset.dt[i,j]
+    }
+}
+
+asset.dt <- data.table(asset.dt, Total = asset.dt$Mizuho+asset.dt$Stock+asset.dt$Yucho)
+
+formattable(asset.dt, list(
+  Total = color_bar("pink")
+))
+
+```
+
+
+
+### Details {data-width=35%}
 
 ```{r}
 
@@ -167,7 +201,6 @@ formattable(output.dt, list(
 ))
 
 ```
-
 
 ### Month {data-width=30%}
 
