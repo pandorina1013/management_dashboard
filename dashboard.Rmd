@@ -92,6 +92,8 @@ for(i in 1:nrow(asset.dt)){
     asset.dt[i,j] <- asset.dt[i,j-1] + asset.dt[i,j]
   }
 }
+asset.dt <- asset.dt %>% rbind(., .[nrow(.),])
+asset.dt$ds[nrow(asset.dt)] <- Sys.Date() %>% as.Date()
 
 p <- plot_ly(asset.dt, x = ~ds, y = ~Yucho, name = 'Yucho', type = 'scatter', mode = 'none', fill = 'tozeroy', fillcolor = '#97D1C7', showlegend = FALSE) %>%
   add_trace(y = ~Stock, name = 'Stock', fillcolor = '#F58A88') %>%
@@ -132,6 +134,10 @@ for(i in 1:nrow(asset.dt)){
     asset.dt[i,j] <- asset.dt[i,j-1] + asset.dt[i,j]
   }
 }
+
+asset.dt <- asset.dt %>% rbind(., .[nrow(.),])
+asset.dt$ds[nrow(asset.dt)] <- Sys.Date() %>% as.Date()
+
 asset.dt[,2:4] <- asset.dt[,2:4]/apply(asset.dt[,2:4],1,sum)
 for(i in 1:nrow(asset.dt)){
   for(j in 3:ncol(asset.dt)){
