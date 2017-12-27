@@ -49,7 +49,7 @@ valueBox(stock_fresh,
 
 ```{r}
 tax_fresh <- fread("data.csv", encoding = "UTF-8")
-tax_fresh <- tax_fresh[tax_fresh$`I/O` == "日経" | tax_fresh$`I/O` == "朝日" | tax_fresh$`I/O` == "臨時", ]
+tax_fresh <- tax_fresh[tax_fresh$`I/O` == "N" | tax_fresh$`I/O` == "A" | tax_fresh$`I/O` == "臨時", ]
 tax_fresh <- tax_fresh[as.character(substr(Sys.Date(),1,4)) == as.character(substr(tax_fresh$ds,1,4)),]  %>% 
   select(amount) %>% 
   sum()
